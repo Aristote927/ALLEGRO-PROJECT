@@ -1,0 +1,64 @@
+int main()
+{
+    t_joueur *joueur;    // Un joueur (à créer)
+    BITMAP *page;        // BITMAP buffer d'affichage
+
+    // Lancer allegro et le mode graphique
+    allegro_init();
+    install_keyboard();
+    install_mouse();
+
+    set_color_depth(desktop_color_depth());
+    if (set_gfx_mode(GFX_AUTODETECT_WINDOWED,800,600,0,0)!=0)
+    {
+        allegro_message("prb gfx mode");
+        allegro_exit();
+        exit(EXIT_FAILURE);
+    }
+    show_mouse(screen);
+
+    // CREATION DU BUFFER D'AFFICHAGE à la taille de l'écran
+    page=create_bitmap(SCREEN_W,SCREEN_H);
+    clear_bitmap(page);
+
+
+    // Charger le fichier avec les tuiles
+    tableTuiles=load_bitmap_check("map32.bmp");
+
+    // Allocation et initialisation des paramètres de l'joueur :
+    joueur = (t_joueur *)malloc(1*sizeof(t_joueur));
+    // Pour la position : multiples de l'unité de déplacement...
+    //POSITION DEPART
+    joueur->x = 16;     joueur->y = 215;
+    joueur->img = load_bitmap_check("sprite.bmp");
+
+    // Boucle de jeu (rien pour l'instant)
+    while (!key[KEY_ESC])
+    {
+        // dessiner le terrain
+        dessineTerrain(page, terrain);
+    // gérer déplacements en prenant en compte les obstacles
+        deplacer(joueur);
+
+        // détecter interactions avec des éléments spéciaux
+        if ( typeTerrain(joueur,0,0,2) ) // dans l'eau ?
+            textprintf_centre_ex(page,font,400,570,makecol(255,255,255),0," NAGE ");
+        else
+            textprintf_centre_ex(page,font,400,550,makecol(255,255,255),0," %d ", joueur->x);
+            textprintf_centre_ex(page,font,400,570,makecol(255,255,255),0," %d ", joueur->y);
+
+
+        // afficher personnage (positionner par rapport à ses jambes)
+        draw_sprite(page, joueur->img, joueur->x - joueur->img->w/2, joueur->y - joueur->img->h + 8);
+
+        // affichage du buffer mis a jour a l'ecran
+        blit(page,screen,0,0,0,0,SCREEN_W,SCREEN_H);
+
+        // on fait une petite pause
+        rest(15);
+
+    }
+
+    return 0;
+}
+END_OF_MAIN();
