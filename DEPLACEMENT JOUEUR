@@ -1,0 +1,19 @@
+void deplacer(t_joueur *joueur){
+
+    if ( mouse_x>= joueur->x-16 && mouse_x<=joueur->x+16 && mouse_b & 1){
+        if ( mouse_y>= joueur->y-20 && mouse_y<=joueur->y+10 && mouse_b & 1){
+            if(!typeTerrain(joueur,32,0,1)){
+                joueur->x+=32;
+            }
+        }
+    }
+
+    if (    key[KEY_LEFT] && !typeTerrain(joueur,-32,0,1) )
+        joueur->x-=32;
+    if (    key[KEY_DOWN] && !typeTerrain(joueur,0,16,1) )
+        joueur->y+=32;
+
+    if (    key[KEY_UP] && !typeTerrain(joueur,0,-30,1) )
+        joueur->y-=32;
+
+}
