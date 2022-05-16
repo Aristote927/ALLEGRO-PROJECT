@@ -1,0 +1,257 @@
+#include <allegro.h>
+#define NTUILE     300   // Nombre de tuiles graphiques utilisées
+#define TXTUILE    32    // Largeur des tuiles
+#define TYTUILE    32    // Hauteur des tuiles
+#define NCOLTUILE  20    // Nombre de colonnes de tuiles dans le fichier image
+#define NXMAP      25      // Nombre de tuiles en largeur sur le terrain
+#define NYMAP      16      // Nombre de tuiles en hauteur sur le terrain
+// Sur cet exemple on a un seul ensemble de tuiles
+// ( on s'autorise une globale, là encore pour simplifier )
+BITMAP *tableTuiles;
+// Pour gérer les collisions on indique les types de tuiles : 1 obstacle  2 eau
+int typeTuiles[NTUILE] = {
+    0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+// Ici un seul terrain de jeu
+// ( pour en avoir plusieurs faire un tableau de plusieurs des ces matrices
+int terrain[NYMAP][NXMAP] = {
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+};
+
+
+// données personnelles de chaque joueur qui se déplace
+typedef struct joueur
+{
+    int x, y;          // coordonnées (en pixels) des pieds de l'joueur
+    BITMAP *img;       // image de l'joueur
+} t_joueur;
+
+
+/******************************************/
+/*         SOUS-PROGRAMMES                */
+/******************************************/
+
+// Dessine la tuile numéro ituile sur la bitmap bmp au coordonnées xmap ymap
+// (unité en nombre de tuiles, pas en pixels)
+void dessineTuile(BITMAP *bmp, int ituile, int xmap, int ymap){
+    int lig, col; // ligne et colonne de la tuile source dans tableTuiles
+
+    // Le numéro de ligne et de colonne dans un tableau 2D
+    // à partir de l'indice du ième élément (en comptant de gauche à droite
+    // et de haut en bas) s'obtiennent avec le quotient et le reste
+    // dans la division de l'indice par le nombre de colonnes du tableau
+    lig = ituile / NCOLTUILE;
+    col = ituile % NCOLTUILE;
+
+    // on copie juste le morceau concerné
+    blit(tableTuiles, bmp, col*TXTUILE, lig*TYTUILE,
+         xmap*TXTUILE, ymap*TYTUILE, TXTUILE, TYTUILE);
+
+    // pour visualiser les types de tuiles (obstacle, eau)
+    // ( à enlever pour un programme finalisé...)
+    if (key[KEY_SPACE])
+    {
+        if (typeTuiles[ituile]==1)
+            rect(bmp, xmap*TXTUILE, ymap*TYTUILE, xmap*TXTUILE+TXTUILE-1, ymap*TYTUILE +TYTUILE-1, makecol(255,0,0));
+        if (typeTuiles[ituile]==2)
+            rect(bmp, xmap*TXTUILE, ymap*TYTUILE, xmap*TXTUILE+TXTUILE-1, ymap*TYTUILE +TYTUILE-1, makecol(0,0,255));
+    }
+}
+
+// Dessine un terrain complet sur une bitmap
+void dessineTerrain(BITMAP *bmp, int terrain[NYMAP][NXMAP]){
+    int xmap,ymap;
+
+    for (ymap=0;ymap<NYMAP;ymap++)
+            for (xmap=0;xmap<NXMAP;xmap++)
+                dessineTuile(bmp,terrain[ymap][xmap],xmap,ymap);
+}
+
+// Tester si le déplacement dx dy ammène sur une tuile du type indiqué
+// Si le type indiqué est 1 (obstacle) alors un déplacement
+// en dehors du terrain retourne également vrai
+// Retourne OUI : 1   NON : 0
+int typeTerrain(t_joueur *joueur, int dx, int dy, int type){
+    int xmap,ymap,ituile; // Coordonnées matrice et numéro de tuile
+    int decx,decy;        // Pour visiter les coins...
+    int cx,cy;            // Coordonnées des coins (en pixels)
+
+    // Pour chacun des 4 coins...
+    for (decy=-TYTUILE/2; decy<TYTUILE/2; decy+=TYTUILE-1)
+        for (decx=-TXTUILE/2; decx<TXTUILE/2; decx+=TXTUILE-1)
+        {
+            // Coord. du coin
+            cx=joueur->x+dx+decx;
+            cy=joueur->y+dy+decy;
+
+            // Si on sort du terrain...
+            if (cx<0 || cx>=NXMAP*TXTUILE || cy<0 || cy>=NYMAP*TYTUILE)
+            {
+                if (type==1)  return 1;  // Oui c'est un obstacle
+                else  return 0;          // Non ce n'est pas autre chose...
+            }
+
+            // Trouver les coordonnées matrice
+            xmap=cx/TXTUILE;
+            ymap=cy/TYTUILE;
+
+            // Récupérer le numéro de tuile sur laquelle on arrive
+            ituile=terrain[ymap][xmap];
+
+            // Retourner OUI si le type de la tuile est bien celui recherché
+            if (typeTuiles[ituile]==type)
+                return 1;
+        }
+
+    // Donc NON, on n'a pas trouvé le type recherché
+    return 0;
+}
+
+// Chargement "sécurisé" d'une image :
+// interrompt le programme avec un message si problème...
+BITMAP * load_bitmap_check(char *nomImage){
+    BITMAP *bmp;
+    bmp=load_bitmap(nomImage,NULL);
+    if (!bmp)
+    {
+        allegro_message("pas pu trouver %s",nomImage);
+        exit(EXIT_FAILURE);
+    }
+    return bmp;
+}
+
+
+void choixdeplacement(BITMAP *bmp, t_joueur *joueur){
+    for (int i=0; i<4; i++){
+        for(int j=0; j<4;j++){
+                rect(bmp, joueur->x+16+i*32, joueur->y-22+i*32, joueur->x+16+(i+1)*32, joueur->y+10+(i+1)*32, makecol(34,66,124));
+        }
+    }
+}
+
+
+
+void deplacer(t_joueur *joueur){
+
+    if ( mouse_x>= joueur->x-16 && mouse_x<=joueur->x+16 && mouse_b & 1){
+        if ( mouse_y>= joueur->y-20 && mouse_y<=joueur->y+10 && mouse_b & 1){
+            if(!typeTerrain(joueur,32,0,1)){
+                joueur->x+=32;
+            }
+        }
+    }
+
+    if (    key[KEY_LEFT] && !typeTerrain(joueur,-32,0,1) )
+        joueur->x-=32;
+    if (    key[KEY_DOWN] && !typeTerrain(joueur,0,16,1) )
+        joueur->y+=32;
+
+    if (    key[KEY_UP] && !typeTerrain(joueur,0,-30,1) )
+        joueur->y-=32;
+
+}
+
+
+
+
+
+int main()
+{
+    t_joueur *joueur;    // Un joueur (à créer)
+    BITMAP *page;        // BITMAP buffer d'affichage
+
+    // Lancer allegro et le mode graphique
+    allegro_init();
+    install_keyboard();
+    install_mouse();
+
+    set_color_depth(desktop_color_depth());
+    if (set_gfx_mode(GFX_AUTODETECT_WINDOWED,800,600,0,0)!=0)
+    {
+        allegro_message("prb gfx mode");
+        allegro_exit();
+        exit(EXIT_FAILURE);
+    }
+    show_mouse(screen);
+
+    // CREATION DU BUFFER D'AFFICHAGE à la taille de l'écran
+    page=create_bitmap(SCREEN_W,SCREEN_H);
+    clear_bitmap(page);
+
+
+    // Charger le fichier avec les tuiles
+    tableTuiles=load_bitmap_check("map32.bmp");
+
+    // Allocation et initialisation des paramètres de l'joueur :
+    joueur = (t_joueur *)malloc(1*sizeof(t_joueur));
+    // Pour la position : multiples de l'unité de déplacement...
+
+    //POSITION initiale
+
+    joueur->x = 16;
+    joueur->y = 215;
+
+    joueur->img = load_bitmap_check("sprite.bmp");
+
+
+    // Boucle de jeu (rien pour l'instant)
+    while (!key[KEY_ESC])
+    {
+        // dessiner le terrain
+        dessineTerrain(page, terrain);
+
+
+        choixdeplacement(page, joueur);
+
+
+
+    // gérer déplacements en prenant en compte les obstacles
+        deplacer(joueur);
+
+        // détecter interactions avec des éléments spéciaux
+        if ( typeTerrain(joueur,0,0,2) ) // dans l'eau ?
+            textprintf_centre_ex(page,font,400,570,makecol(255,255,255),0," NAGE ");
+        else
+            textprintf_centre_ex(page,font,400,550,makecol(255,255,255),0," %d ", joueur->x);
+            textprintf_centre_ex(page,font,400,570,makecol(255,255,255),0," %d ", joueur->y);
+
+
+        // afficher personnage (positionner par rapport à ses jambes)
+        draw_sprite(page, joueur->img, joueur->x - joueur->img->w/2, joueur->y - joueur->img->h + 8);
+
+        // affichage du buffer mis a jour a l'ecran
+        blit(page,screen,0,0,0,0,SCREEN_W,SCREEN_H);
+
+        // on fait une petite pause
+        rest(15);
+
+    }
+
+    return 0;
+}
+END_OF_MAIN();
