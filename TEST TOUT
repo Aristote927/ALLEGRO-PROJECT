@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+
+// données personnelles de chaque joueur qui se déplace
+typedef struct joueur
+{
+    int x, y;          // coordonnées (en pixels) des pieds de du joueur
+    int xt, yt;      //coordonnees en tuiles
+           // image de l'joueur
+} t_joueur;
+
+typedef struct attaque
+
+
+typedef struct tuile{
+    int x0, x1;
+    int y0, y1;
+}t_tuile
+
+
+void associer (tab[16][25], t_tuile tuiles){
+    for (int i=0; i<17; i++){
+        for (int j=0;j=26;j++){
+                i=
+            if (tuile->x0>0+i && tuile->x1<32+i){
+                if(&& tuile->y0<0+j && tuile->y1>32+j){
+                    tab[i][j];
+                }
+            }
+        }
+    }
+}
+
+int main()
+{
+    associer()
+    printf("Hello world!\n");
+    return 0;
+}
+
+
+for (int x=-5; x<5; x++){
+    for (int y=-5; y<5;y++){}
+}
+
+void choixdeplacement(BITMAP *bmp, t_joueur joueur){
+    for (int i=0; i<5; i++){
+        rect(bmp,joueur->(x+16)+i*32, joueur->y-22, joueur->(x+16)+(i+1)*32, joueur->y+10  makecol(255,0,0));
+    }
+}
+
+void deplacement
+if (mouse_x>= joueur->x-16 && mouse_x<=joueur->x+16 && mouse_b & 1){
+    choixdeplacement(bmp,terrain[ymap][xmap],xmap,ymap);
+    if (abs(x)+abs(y)<5){
+        joueur->x += x*35;
+        joueur->y += y*35;
+    }
+}
+
+
+
+
+void deplacementsegado(){
+    if (mouse_b & 1) // Si lutilisateur clique sur le bouton gauche de la souris
+    {
+        clicx=mouse_x;
+        clicy=mouse_y; //on garde en mémoire le clic de lutilisateur
+
+        while (joueur->x != clicx || joueur->y != clicy)
+        {
+            clear_bitmap(page); //on efface notre DB
+
+
+            if (joueur->x < clicx) //si le perso est a gauche de lendroit darrivee
+                joueur->x +=1; // on augmente labcisse du perso > on va a droite
+
+            else if (joueur->x > clicx) //si le perso est a gauche de lendroit darrivee
+                joueur->x -=1;// on diminue labcisse du perso > on va a gauche
+
+
+            else if (joueur->y < clicy) //si le perso est en haut de lendroit darrivee
+                joueur->y +=1;// on augmente l'oordonnee du perso > on va en bas
+
+
+            else if (joueur->y > clicy) //si le perso est en bas de lendroit darrivee
+                joueur->y -=1;// on diminue l'ordonnee du perso > on va en haut
+
+
+            blit(page,screen,0,0,0,0,SCREEN_W,SCREEN_H); // on affiche notre DB a lecran
+        }
+    }
+}
