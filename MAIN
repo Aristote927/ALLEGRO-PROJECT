@@ -1,8 +1,5 @@
 int main()
 {
-    t_joueur *joueur;    // Un joueur (à créer)
-    BITMAP *page;        // BITMAP buffer d'affichage
-
     // Lancer allegro et le mode graphique
     allegro_init();
     install_keyboard();
@@ -15,47 +12,137 @@ int main()
         allegro_exit();
         exit(EXIT_FAILURE);
     }
+
     show_mouse(screen);
+
+    BITMAP *tableTuiles;// Pour gérer les collisions on indique les types de tuiles : 1 obstacle
+    BITMAP *page;        // BITMAP buffer d'affichage
+    BITMAP *menu1;
+    BITMAP *menu2;
+    BITMAP *regles;
+
+    BITMAP* buffer_detection;
+    BITMAP* bufferdetection2;
+    BITMAP* buffersortie;
 
     // CREATION DU BUFFER D'AFFICHAGE à la taille de l'écran
     page=create_bitmap(SCREEN_W,SCREEN_H);
     clear_bitmap(page);
 
+    buffer_detection= create_bitmap(SCREEN_W,SCREEN_H);
+    clear_bitmap(buffer_detection);
+
+    bufferdetection2= create_bitmap(SCREEN_W,SCREEN_H);
+    clear_bitmap(bufferdetection2);
+
+    buffersortie = create_bitmap(SCREEN_W, SCREEN_H);
+    clear_bitmap(buffersortie);
+
 
     // Charger le fichier avec les tuiles
-    tableTuiles=load_bitmap_check("map32.bmp");
+
 
     // Allocation et initialisation des paramètres de l'joueur :
-    joueur = (t_joueur *)malloc(1*sizeof(t_joueur));
+    t_joueur *joueur = malloc(4*(sizeof (t_joueur)));
     // Pour la position : multiples de l'unité de déplacement...
-    //POSITION DEPART
-    joueur->x = 16;     joueur->y = 215;
-    joueur->img = load_bitmap_check("sprite.bmp");
+    tableTuiles=load_bitmap_check("map32.bmp");
 
-    // Boucle de jeu (rien pour l'instant)
+    // initialisation des tampons
+    int clicx=0;
+    int clicy=0; //nos coordonnées de la souris quand on clic
+
+    int typeTuiles[NTUILE] = {
+        0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    };
+    // Ici un seul terrain de jeu
+    // ( pour en avoir plusieurs faire un tableau de plusieurs des ces matrices
+    int terrain[NYMAP][NXMAP] = {
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    };
+
+    joueur[1].img = load_bitmap_check("perso 1.bmp");
+    joueur[2].img = load_bitmap_check("perso 2.bmp");
+
+    menu1 = load_bitmap_check("menu1.bmp");
+    menu2 = load_bitmap_check("menu2.bmp");
+    regles = load_bitmap_check("reglesjeu.bmp");
+
+
+    ///***************///
+    /// BOUCLE DE JEU ///
+    ///***************///
+
+    initialisation(joueur);
+    attaque(joueur);
+
+    affichemenu1(buffer_detection, menu1,page);
+    if (affichemenu1(buffer_detection, menu1,page)==0){
+        affichemenu2(bufferdetection2, menu2, page);
+    }
+
+    else if (affichemenu1(buffer_detection, menu1,page)==2){
+        reglesjeu(buffersortie, regles, page);
+    }
+
     while (!key[KEY_ESC])
     {
         // dessiner le terrain
-        dessineTerrain(page, terrain);
+        dessineTerrain(tableTuiles, page, typeTuiles, terrain);
+
+        //choixdeplacement(page, joueur);
+
+        if (mouse_b & 1) // Si lutilisateur clique sur le bouton gauche de la souris
+        {
+            clicx=mouse_x;
+            clicy=mouse_y; //on garde en mémoire le clic de lutilisateur
+            clicx -= clicx%32;
+            clicy -= clicy%32;
+            deplacement(page, joueur, clicx, clicy, terrain);
+        }
     // gérer déplacements en prenant en compte les obstacles
-        deplacer(joueur);
 
-        // détecter interactions avec des éléments spéciaux
-        if ( typeTerrain(joueur,0,0,2) ) // dans l'eau ?
-            textprintf_centre_ex(page,font,400,570,makecol(255,255,255),0," NAGE ");
-        else
-            textprintf_centre_ex(page,font,400,550,makecol(255,255,255),0," %d ", joueur->x);
-            textprintf_centre_ex(page,font,400,570,makecol(255,255,255),0," %d ", joueur->y);
 
+        // détecter coord pixels personnage
+        textprintf_centre_ex(page,font,380,550,makecol(255,255,255),0," %d ", joueur[1].x);
+        textprintf_centre_ex(page,font,380,570,makecol(255,255,255),0," %d ", joueur[1].y);
+        textprintf_centre_ex(page,font,410,550,makecol(255,255,255),0," %d ", joueur[2].x);
+        textprintf_centre_ex(page,font,410,570,makecol(255,255,255),0," %d ", joueur[2].y);
 
         // afficher personnage (positionner par rapport à ses jambes)
-        draw_sprite(page, joueur->img, joueur->x - joueur->img->w/2, joueur->y - joueur->img->h + 8);
+        draw_sprite(page, joueur[1].img, joueur[1].x, joueur[1].y - joueur[1].img->h/2);
+        draw_sprite(page, joueur[2].img, joueur[2].x, joueur[2].y - joueur[2].img->h/2);
+        //draw_sprite(page, joueur->img, joueur->x - joueur->img->w/2, joueur->y - joueur->img->h + 8);
 
         // affichage du buffer mis a jour a l'ecran
         blit(page,screen,0,0,0,0,SCREEN_W,SCREEN_H);
+        printf("%d", terrain[(clicy-clicy%32)/32] [(clicx-clicx%32)/32] );
 
-        // on fait une petite pause
-        rest(15);
+        rest(100);
 
     }
 
