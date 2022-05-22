@@ -1,19 +1,46 @@
-void deplacer(t_joueur *joueur){
+#include "header.h"
 
-    if ( mouse_x>= joueur->x-16 && mouse_x<=joueur->x+16 && mouse_b & 1){
-        if ( mouse_y>= joueur->y-20 && mouse_y<=joueur->y+10 && mouse_b & 1){
-            if(!typeTerrain(joueur,32,0,1)){
-                joueur->x+=32;
-            }
+void deplacement(BITMAP* bmp, t_joueur *joueur, int clicx, int clicy, int terrain[NYMAP][NXMAP]){
+
+    while (joueur[1].x != clicx || joueur[1].y != clicy && terrain[(clicy-clicy%32)/32][(clicx-clicx%32)/32] != 1){
+
+        rest(10);
+        draw_sprite(bmp, joueur[1].img, joueur[1].x, joueur[1].y - joueur[1].img->h/2);
+
+        if (joueur[1].x < clicx){ //si le perso est a gauche de lendroit darrivee
+            if (clicx<joueur[1].x)
+                clicx += clicx%32;
+            else if (clicx>joueur[1].x)
+                clicx -= clicx%32;
+            joueur[1].x+=32; // on augmente labcisse du perso > on va a droite
+            blit(bmp,screen,0,0,0,0,SCREEN_W,SCREEN_H);
+        }
+
+        else if (joueur[1].x > clicx){ //si le perso est a gauche de lendroit darrivee
+            if (clicx<joueur[1].x)
+                clicx -=clicx%32;
+            else if (clicx>joueur[1].x)
+                clicx +=clicx%32;
+            joueur[1].x-=32;// on diminue labcisse du perso > on va a gauche
+            blit(bmp,screen,0,0,0,0,SCREEN_W,SCREEN_H);
+        }
+
+        else if (joueur[1].y < clicy){ //si le perso est en haut de lendroit darrivee
+            if (clicy < joueur[1].y)
+                clicy +=clicy%32 ;
+            else if (clicy> joueur[1].y)
+                clicy -=clicy%32 ;
+            joueur[1].y +=32;// on augmente l'oordonnee du perso > on va en bas
+            blit(bmp,screen,0,0,0,0,SCREEN_W,SCREEN_H);
+        }
+
+        else if (joueur[1].y > clicy){ //si le perso est en bas de lendroit darrivee
+            if (clicy< joueur[1].y)
+                clicy -=clicy%32;
+            else if (clicy> joueur[1].y)
+                clicy +=clicy%32;
+            joueur[1].y -=32;// on diminue l'ordonnee du perso > on va en haut
+            blit(bmp,screen,0,0,0,0,SCREEN_W,SCREEN_H);
         }
     }
-
-    if (    key[KEY_LEFT] && !typeTerrain(joueur,-32,0,1) )
-        joueur->x-=32;
-    if (    key[KEY_DOWN] && !typeTerrain(joueur,0,16,1) )
-        joueur->y+=32;
-
-    if (    key[KEY_UP] && !typeTerrain(joueur,0,-30,1) )
-        joueur->y-=32;
-
 }
