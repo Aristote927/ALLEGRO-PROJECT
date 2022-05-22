@@ -1,1 +1,263 @@
+#include "header.h"
+
+/// ////////////////////////////////////////// ///
+/// ****************************************** ///
+///          SOUS-PROGRAMMES                   ///
+/// ****************************************** ///
+/// ////////////////////////////////////////// ///
+
+void dessineTuile(BITMAP *tableTuiles, BITMAP *bmp, int typeTuiles[NTUILE], int ituile, int xmap, int ymap){
+    // Dessine la tuile numéro ituile sur la bitmap bmp au coordonnées xmap ymap
+    // (unité en nombre de tuiles, pas en pixels)
+    int lig, col; // ligne et colonne de la tuile source dans tableTuiles
+
+    // Le numéro de ligne et de colonne dans un tableau 2D
+    // à partir de l'indice du ième élément (en comptant de gauche à droite
+    // et de haut en bas) s'obtiennent avec le quotient et le reste
+    // dans la division de l'indice par le nombre de colonnes du tableau
+    lig = ituile / NCOLTUILE;
+    col = ituile % NCOLTUILE;
+
+    // on copie juste le morceau concerné
+    blit(tableTuiles, bmp, col*TXTUILE, lig*TYTUILE,
+         xmap*TXTUILE, ymap*TYTUILE, TXTUILE, TYTUILE);
+
+    // pour visualiser les types de tuiles (obstacle, eau)
+    // ( à enlever pour un programme finalisé...)
+    if (key[KEY_SPACE])
+    {
+        if (typeTuiles[ituile]==1)
+            rect(bmp, xmap*TXTUILE, ymap*TYTUILE, xmap*TXTUILE+TXTUILE-1, ymap*TYTUILE +TYTUILE-1, makecol(255,0,0));
+        if (typeTuiles[ituile]==2)
+            rect(bmp, xmap*TXTUILE, ymap*TYTUILE, xmap*TXTUILE+TXTUILE-1, ymap*TYTUILE +TYTUILE-1, makecol(0,0,255));
+    }
+}
+
+
+
+void dessineTerrain(BITMAP* tableTuiles, BITMAP *bmp,int typeTuiles[NTUILE], int terrain[NYMAP][NXMAP]){ // Dessine un terrain complet sur une bitmap
+    int xmap,ymap;
+
+    for (ymap=0;ymap<NYMAP;ymap++)
+            for (xmap=0;xmap<NXMAP;xmap++)
+                dessineTuile(tableTuiles, bmp,typeTuiles,terrain[ymap][xmap],xmap,ymap);
+}
+
+
+
+int typeTerrain(t_joueur *joueur, int dx, int dy, int type, int typeTuiles[NTUILE],int terrain[NYMAP][NXMAP]){
+    int xmap,ymap,ituile; // Coordonnées matrice et numéro de tuile
+    int decx,decy;        // Pour visiter les coins...
+    int cx,cy;            // Coordonnées des coins (en pixels)
+
+    // Pour chacun des 4 coins...
+    for (decy=-TYTUILE/2; decy<TYTUILE/2; decy+=TYTUILE-1)
+        for (decx=-TXTUILE/2; decx<TXTUILE/2; decx+=TXTUILE-1)
+        {
+            // Coord. du coin
+            cx=joueur[1].x + dx + decx;
+            cy=joueur[1].y + dy + decy;
+
+            // Si on sort du terrain...
+            if (cx<0 || cx>=NXMAP*TXTUILE || cy<0 || cy>=NYMAP*TYTUILE)
+            {
+                if (type==1){
+                    return 1;
+                }
+
+                else{
+                    return 0;
+                }
+
+            }
+
+            // Trouver les coordonnées matrice
+            xmap=cx/TXTUILE;
+            ymap=cy/TYTUILE;
+
+            // Récupérer le numéro de tuile sur laquelle on arrive
+            ituile=terrain[ymap][xmap];
+
+            // Retourner OUI si le type de la tuile est bien celui recherché
+            //if (typeTuiles[ituile]==type)
+            //    return 1;
+        }
+
+    // Donc NON, on n'a pas trouvé le type recherché
+    return 0;
+}
+
+
+
+BITMAP * load_bitmap_check(char *nomImage){ // Chargement "sécurisé" d'une image :
+                                            // interrompt le programme avec un message si problème...
+    BITMAP *bmp;
+    bmp=load_bitmap(nomImage,NULL);
+    if (!bmp)
+    {
+        allegro_message("pas pu trouver %s",nomImage);
+        exit(EXIT_FAILURE);
+    }
+    return bmp;
+}
+
+
+
+void choixdeplacement(BITMAP *bmp, t_joueur *joueur){
+    for (int i=0; i<4; i++){
+        for(int j=0; j<4;j++){
+                rect(bmp, joueur->x+16+i*32, joueur->y-22+i*32, joueur->x+16+(i+1)*32, joueur->y+10+(i+1)*32, makecol(34,66,124));
+        }
+    }
+}
+
+void initialisation(t_joueur *joueur){
+    for (int i = 0; i<4; i++){
+        joueur[i].pv=1000;
+        joueur[i].pa=10;
+        joueur[i].pm=4;
+        printf("joueur %d : pv= %d | pa= %d | pm= %d\n", i, joueur[i].pv, joueur[i].pa, joueur[i].pm);
+    }
+    joueur[1].x = 64;
+    joueur[1].y = 64;
+    joueur[2].x = 704;
+    joueur[2].y = 64;
+
+
+    //attaque
+    joueur[1].pa=5;
+    joueur[2].pv=100;
+    joueur[1].atk.degats=30;
+    joueur[1].atk.consopa=3;
+}
+
+void attaque(t_joueur *joueur){
+
+    joueur[2].pv -= joueur[1].atk.degats;
+    joueur[1].pa -= joueur[1].atk.consopa;
+    printf("pvjoueur2 : %d\npajoueur1 : %d\n", joueur[2].pv, joueur[1].pa);
+    return;
+
+}
+
+int affichemenu1(BITMAP *buffer_detection, BITMAP *menu1, BITMAP*page){
+    int fin=0;
+    int clicx=0;
+    int clicy=0;
+    while(fin != 1){
+        clicx=mouse_x;
+        clicy=mouse_y;
+        clear_bitmap(page);
+        blit(menu1, page,0, 0, 0, 0,SCREEN_W,SCREEN_H);
+
+        rectfill(buffer_detection, 115, 243, 680, 300, makecol(1, 1, 1));
+        rectfill(buffer_detection, 115, 330, 680, 385, makecol(2, 2, 2));
+        rectfill(buffer_detection, 333, 416, 472, 472, makecol(3, 3, 3));
+        rectfill(buffer_detection, 325, 505, 475, 550, makecol(4, 4, 4));
+
+        if (mouse_b &1){
+            rest(50);
+
+            if (getpixel(buffer_detection, clicx, clicy) == makecol(1, 1, 1)){
+                clear_bitmap(buffer_detection);
+                //clear_bitmap(menu1);
+
+                printf(" nouvelle partie\n");
+                //blit(menu2, page,0,0,0,0, SCREEN_W,SCREEN_H);
+                //blit(page, screen,0,0,0,0, SCREEN_W,SCREEN_H);
+                //affichemenu2(clicx, clicy, bufferdetection2, menu2, page);*/
+                return 0;
+
+            }
+            if (getpixel(buffer_detection, clicx, clicy) == makecol(2, 2, 2)){
+                printf("revanche\n");
+                return 1;
+            }
+
+            if (getpixel(buffer_detection, clicx, clicy) == makecol(3, 3, 3)){
+                printf("regles \n");
+                return 2;
+            }
+
+            if (getpixel(buffer_detection, clicx, clicy) == makecol(4, 4, 4)){
+                printf("quitter \n");
+                exit(1);
+            }
+        }
+        blit(page,screen,0,0,0,0,SCREEN_W, SCREEN_H);
+        rest(10);
+
+    }
+    return ;
+}
+
+
+void affichemenu2(BITMAP *bufferdetection2, BITMAP *menu2, BITMAP *page){
+    int fin=0;
+    int clicx=0;
+    int clicy=0;
+    while(fin != 1){
+        clicx=mouse_x;
+        clicy=mouse_y;
+        clear_bitmap(page);
+        blit(menu2, page,0, 0, 0, 0,SCREEN_W,SCREEN_H);
+
+        rectfill(bufferdetection2, 265, 265, 375, 470, makecol(20, 20, 20));
+        rectfill(bufferdetection2, 430, 275, 600, 450, makecol(30, 30, 30));
+        rectfill(bufferdetection2, 642, 263, 766, 458, makecol(40, 40, 40));
+
+        if (mouse_b &1){
+            rest(10);
+
+            if (getpixel(bufferdetection2, clicx, clicy) == makecol(20, 20, 20)){
+                //clear_bitmap(buffer_detection);
+                //clear_bitmap(menu1);                      //PAS DEBOIN DE CLEAR CAR RETURN
+                printf("2 joueurs\n");
+                //blit(menu2, page,0,0,0,0, SCREEN_W,SCREEN_H);
+                //blit(page, screen,0,0,0,0, SCREEN_W,SCREEN_H);
+                //affichemenu2(clicx, clicy, bufferdetection2, menu2, page);
+                return;
+            }
+
+            if (getpixel(bufferdetection2, clicx, clicy) == makecol(30, 30, 30)){
+                printf("3 joueurs\n");
+                return;
+            }
+            if (getpixel(bufferdetection2, clicx, clicy) == makecol(40, 40, 40)){
+                printf("4 joueurs\n");
+                return;
+            }
+
+        }
+        blit(page,screen,0,0,0,0,SCREEN_W, SCREEN_H);
+        rest(10);
+    }
+    return;
+}
+
+void reglesjeu(BITMAP *buffersortie, BITMAP *regles, BITMAP* page){
+    int fin=0;
+
+    while(fin !=1){
+        clear_bitmap(page);
+        blit(regles, page,0, 0, 0, 0,SCREEN_W,SCREEN_H);
+
+        rectfill(buffersortie, 0, 30, 0, 300, makecol(10, 10, 10));
+
+        if (mouse_b &1){
+            rest(10);
+
+            if (getpixel(buffersortie, mouse_x, mouse_y)== makecol(60,60,60)){
+                printf("retour menu1\n");
+                return;
+            }
+        }
+        blit(page,screen,0,0,0,0,SCREEN_W, SCREEN_H);
+        rest(10);
+    }
+    return;
+}
+
+
+
 
