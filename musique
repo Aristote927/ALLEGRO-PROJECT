@@ -1,0 +1,40 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <allegro.h>
+
+void ambiance(SAMPLE *generique){
+
+    install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, NULL);
+    play_sample(generique, 25, 128, 700,9);
+    int fin=0;
+    while (!fin){
+
+    }
+    destroy_sample(generique);
+
+}
+
+
+int main()
+{
+    allegro_init();
+    install_keyboard();
+    install_mouse();
+
+    set_color_depth(desktop_color_depth());
+    if (set_gfx_mode(GFX_AUTODETECT_WINDOWED,800,600,0,0)!=0)
+    {
+        allegro_message("prb gfx mode");
+        allegro_exit();
+        exit(EXIT_FAILURE);
+    }
+
+
+    SAMPLE *generique;
+    generique = load_sample("main theme.wav");
+
+    ambiance(generique);
+
+    return 0;
+}
+END_OF_MAIN();
